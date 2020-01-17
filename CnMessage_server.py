@@ -34,7 +34,7 @@ file_msg = []
 history = defaultdict(list)
 
 
-def clientthread(conn, addr, online_msg, offline_msg, file_msg): 
+def clientthread(conn, addr, unread_msg, file_msg, history): 
   
     # sends a message to the client whose user object is conn 
     # conn.send("Welcome to this chatroom!") 
@@ -160,14 +160,14 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
         elif status == 13 :
             num = len(unread_msg[current_username])
             conn.sendall(num.to_bytes(4, byteorder='little'))
-            for msg in (unread_msg[current_username])[:] :
+            for msg in unread_msg[current_username] :
                 conn.sendall(bytes(len(msg[0])))
                 conn.sendall(msg[0].encode())
 
                 conn.sendall(bytes(len(msg[2])))
                 conn.sendall(msg[2].encode())
-                
-                unread_msg[current_username].remove(msg)
+            
+            unread_msg[current_username].clear()
 
         # client request online file
         elif status == 14 :
@@ -180,7 +180,7 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
                 conn.sendall(bytes(len(msg[2])))
                 conn.sendall(msg[2].encode())
                 
-                file_msg[current_username].remove(msg)
+            file_msg[current_username].clear()
 
         # TODO : disconnect ?
 
@@ -195,7 +195,7 @@ while True:
     print(addr[0] + " connected")
   
     # creates and individual thread for every user
-    start_new_thread(clientthread, (conn, addr, online_msg, offline_msg, file_msg))     
+    start_new_thread(clientthread, (conn, addr, unread_msg, file_msg, history))     
   
 conn.close() 
 server.close() 
