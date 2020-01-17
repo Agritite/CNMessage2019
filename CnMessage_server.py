@@ -185,7 +185,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
                 conn.sendall(msg[2].encode())
 
                 conn.sendall(len(msg[3]).to_bytes(4, byteorder='little'))
-                conn.sendall(msg[3].encode())
+                conn.sendall(msg[3]) #un-encoded
                 
             file_msg[current_username].clear()
 
