@@ -132,21 +132,21 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
             dest = conn.recv(username_size).decode()
 
             fname_size = conn.recv(4)
-            fname_size = int.from_bytes(msg_size, byteorder='little')
+            fname_size = int.from_bytes(fname_size, byteorder='little')
             filename = conn.recv(fname_size)
 
             file_size = conn.recv(4)
             file_size = int.from_bytes(file_size, byteorder='little')
-            filedata = conn.recv(file_size)
+            filedata = recvall(conn, file_size)
 
             # prints the message of the user who just sent the file on the server terminal
-            print(current_username + 'send file to ' + dest)
+            print(current_username + ' send ' + filename + ' to ' + dest)
             # put msg in list
             if dest not in connected_client : #offline
                 conn.sendall(bytes([0]))
             else : #online
                 history[dest].append([current_username, dest, filename])
-                file_msg.append[dest]([current_username, dest, filename, filedata])
+                file_msg[dest].append([current_username, dest, filename, filedata])
                 conn.sendall(bytes([1]))
 
         #log out
@@ -158,6 +158,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
 
         # client request online msg
         elif status == 13 :
+            print('text peek by ' + current_username)
             num = len(unread_msg[current_username])
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in unread_msg[current_username] :
@@ -171,6 +172,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
 
         # client request online file
         elif status == 14 :
+            print('file peek by ' + current_username)
             num = len(file_msg[current_username])
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in (file_msg[current_username])[:] :
@@ -187,6 +189,17 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
     print('thread ended')
         
   
+def recvall(s, recv_size):
+  recv_buffer = []
+  while 1:
+    data = s.recv(recv_size)
+    if not data:
+        break
+    recv_buffer.extend(data)
+    if len(recv_buffer) == recv_size:
+        break
+  return ''.join(recv_buffer)
+
 while True: 
 
     conn, addr = server.accept() 
