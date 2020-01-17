@@ -87,6 +87,7 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
             else :
                 conn.sendall(bytes([1]))
                 login_flag = True
+                user_list[username] = hash(password)
                 current_username = username
                 print('registered: ' + username)
                 conn.close()
