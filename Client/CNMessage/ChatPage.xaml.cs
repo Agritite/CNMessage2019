@@ -164,7 +164,7 @@ namespace CNMessage
 
         private void PeekFile()
         {
-            CNM.SendSock.Send(new byte[1] { 13 });
+            CNM.SendSock.Send(new byte[1] { 14 });
 
             byte[] msg = new byte[4];
             CNM.ReceiveAll(msg);
@@ -192,7 +192,7 @@ namespace CNMessage
                 CNM.ReceiveAll(msg);
                 uint filesize = BitConverter.ToUInt32(msg, 0);
 
-                msg = new byte[filenamesize];
+                msg = new byte[filesize];
                 CNM.ReceiveAll(msg);
 
                 DTSource.Add(new FileGridEntry(username, filename, msg, filesize.ToString()));
@@ -202,6 +202,8 @@ namespace CNMessage
 
         private void PeekMessage(object sender, EventArgs e)
         {
+            if (!CNM.IsLogin)
+                return;
             PeekText();
             PeekFile();
         }
@@ -250,7 +252,6 @@ namespace CNMessage
 
         private void OnLogoutClick(object sender, RoutedEventArgs e)
         {
-            PeekTimer.Stop();
             ((MainWindow)Application.Current.MainWindow).OnLogout();
         }
 
