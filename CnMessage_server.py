@@ -27,12 +27,10 @@ user_list = {}
 # online user
 connected_client = {}
 # [from, to, msg]
-online_msg = []
-# [from, to, msg]
-offline_msg = []
+unread_msg = defaultdict(list)
 # [from, to, filename, data]
 file_msg = []
-# historical 
+# history[username] = list of [from, to, msg/filename]
 history = defaultdict(list)
 
 
@@ -94,8 +92,15 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
                 break
         
         # query history
-        # elif status == 2 :
-            # TODO
+        elif status == 2 :
+            num = len(history[current_username])
+            conn.sendall(num.to_bytes(4, byteorder='little'))
+            for msg in history[current_username] :
+                conn.sendall(bytes(len(msg[0])))
+                conn.sendall(msg[0].encode())
+
+                conn.sendall(bytes(len(msg[2])))
+                conn.sendall(msg[2].encode())
 
         # send msg
         elif status == 3 :
@@ -112,12 +117,13 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
             # put msg in list
             if dest not in user_list :
                 conn.sendall(bytes([0]))
-            elif dest in connected_client : # online
-                online_msg.append([current_username, dest, message])
+            else :
+                history[dest].append([current_username, dest, message])
+                unread_msg[dest].append([current_username, dest, message])
                 conn.sendall(bytes([1]))
-            else : #offline
-                offline_msg.append([current_username, dest, message])
-                conn.sendall(bytes([1]))
+            # else : #offline
+            #     history[dest].append([current_username, dest, message])
+            #     conn.sendall(bytes([1]))
 
         # file transfer
         elif status == 4 :
@@ -139,44 +145,46 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
             if dest not in connected_client : #offline
                 conn.sendall(bytes([0]))
             else : #online
-                file_msg.append([current_username, dest, filename, filedata])
+                history[dest].append([current_username, dest, filename])
+                file_msg.append[dest]([current_username, dest, filename, filedata])
                 conn.sendall(bytes([1]))
 
         #log out
         elif status == 5 :
             conn.close()
             del connected_client[current_username]
+            del file_msg[current_username]
             break
 
-
-        # TODO : disconnect ?
-
-
-        # check online msg
-        for msg in online_msg :
-            if msg[1] == current_username :
-                conn.sendall(bytes([13]))
-
+        # client request online msg
+        elif status == 13 :
+            num = len(unread_msg[current_username])
+            conn.sendall(num.to_bytes(4, byteorder='little'))
+            for msg in (unread_msg[current_username])[:] :
                 conn.sendall(bytes(len(msg[0])))
                 conn.sendall(msg[0].encode())
 
                 conn.sendall(bytes(len(msg[2])))
                 conn.sendall(msg[2].encode())
                 
-                online_msg.remove(msg)
+                unread_msg[current_username].remove(msg)
 
-        # check online file
-        for msg in file_msg :
-            if msg[1] == current_username :
-                    conn.sendall(bytes([14]))
+        # client request online file
+        elif status == 14 :
+            num = len(file_msg[current_username])
+            conn.sendall(num.to_bytes(4, byteorder='little'))
+            for msg in (file_msg[current_username])[:] :
+                conn.sendall(bytes(len(msg[0])))
+                conn.sendall(msg[0].encode())
 
-                    conn.sendall(bytes(len(msg[0])))
-                    conn.sendall(msg[0].encode())
+                conn.sendall(bytes(len(msg[2])))
+                conn.sendall(msg[2].encode())
+                
+                file_msg[current_username].remove(msg)
 
-                    conn.sendall(bytes(len(msg[2])))
-                    conn.sendall(msg[2].encode())
+        # TODO : disconnect ?
 
-                    file_msg.remove(msg)
+    print('thread ended')
         
   
 while True: 
