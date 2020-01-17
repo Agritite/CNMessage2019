@@ -38,7 +38,7 @@ namespace CNMessage
             CNM.SendSock.Send(Encoding.ASCII.GetBytes(Pwd.Password));
 
             byte[] msg = new byte[1];
-            CNM.SendSock.Receive(msg);
+            CNM.ReceiveAll(msg);
             if (msg[0] == BitConverter.GetBytes(0)[0])
             {
                 CNM.SendSock.Shutdown(SocketShutdown.Both);
