@@ -160,7 +160,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
         # client request online msg
         elif status == 13 :
             num = len(unread_msg[current_username])
-            print(current_username + ' requests ' + num + ' messages')
+            print(current_username + ' requests ' + str(num) + ' messages')
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in unread_msg[current_username] :
                 conn.sendall(len(msg[0]).to_bytes(4, byteorder='little'))
@@ -174,7 +174,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
         # client request online file
         elif status == 14 :
             num = len(file_msg[current_username])
-            print(current_username + ' requests ' + num + ' files')
+            print(current_username + ' requests ' + str(num) + ' files')
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in (file_msg[current_username])[:] :
                 conn.sendall(len(msg[0]).to_bytes(4, byteorder='little'))
