@@ -114,8 +114,10 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
                 conn.sendall(bytes([0]))
             elif dest in connected_client : # online
                 online_msg.append([current_username, dest, message])
+                conn.sendall(bytes([1]))
             else : #offline
                 offline_msg.append([current_username, dest, message])
+                conn.sendall(bytes([1]))
 
         # file transfer
         elif status == 4 :
@@ -138,6 +140,7 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
                 conn.sendall(bytes([0]))
             else : #online
                 file_msg.append([current_username, dest, filename, filedata])
+                conn.sendall(bytes([1]))
 
         #log out
         elif status == 5 :
