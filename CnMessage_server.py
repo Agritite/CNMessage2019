@@ -16,7 +16,7 @@ if len(sys.argv) != 3:
 IP_address = str(sys.argv[1]) 
 Port = int(sys.argv[2]) 
   
-# The client must be aware of these parameters 
+# The client must be aware of these parameters.
 server.bind((IP_address, Port)) 
 # listens for 10 active connections. 
 server.listen(10) 
@@ -42,12 +42,13 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
     # conn.send("Welcome to this chatroom!") 
     login_flag = False 
     current_username = ''
+    print('thread started')
 
     while True: 
         # reading: non-blocking, timeout = 1s
         readable, _, _ = select.select([conn], [], [], 1)
         if conn in readable :
-            status = int.from_bytes(conn.recv(4), byteorder='little')
+            status = int.from_bytes(conn.recv(1), byteorder='little')
         else : # nothing to read
             status = -1 
 
@@ -55,34 +56,36 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
         if status == 0 :
             username_size = int.from_bytes(conn.recv(4), byteorder='little')
             username = conn.recv(username_size).decode()
-            password_size = int(conn.recv(4).decode())
+            password_size = int.from_bytes(conn.recv(4), byteorder='little')
             password = conn.recv(password_size).decode()
 
             #login success
             if username in user_list and user_list[username] == hash(password) :
-                conn.send(bytes([1]))
+                conn.sendall(bytes([1]))
                 login_flag = True
                 current_username = username 
                 connected_client[current_username] = conn
                 print('login succuss: ' + current_username)
             else :
-                conn.send(bytes([0]))
+                conn.sendall(bytes([0]))
                 print('login failed: ' + username)
                 conn.close()
                 break
 
         # register 
         elif status == 1 :
-            username_size = int(conn.recv(4).decode())
+            username_size = int.from_bytes(conn.recv(4), byteorder='little')
             username = conn.recv(username_size).decode()
-            password_size = int(conn.recv(4).decode())
+
+            password_size = int.from_bytes(conn.recv(4), byteorder='little')
             password = conn.recv(password_size).decode()
+
             # register failed
             if username in user_list :
-                conn.send(bytes([0]))
+                conn.sendall(bytes([0]))
                 print('username used.')
             else :
-                conn.send(bytes([1]))
+                conn.sendall(bytes([1]))
                 login_flag = True
                 current_username = username
                 print('registered: ' + username)
@@ -107,7 +110,7 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
             print(current_username + ' to ' + dest + ' : ' + message)
             # put msg in list
             if dest not in user_list :
-                conn.send(bytes([0]))
+                conn.sendall(bytes([0]))
             elif dest in connected_client : # online
                 OnlineMsg.append([current_username, dest, message])
             else : #offline
@@ -131,7 +134,7 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
             print(current_username + 'send file to ' + dest)
             # put msg in list
             if dest not in connected_client : #offline
-                conn.send(bytes([0]))
+                conn.sendall(bytes([0]))
             else : #online
                 file_msg.append([current_username, dest, filename, filedata])
 
@@ -148,26 +151,26 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
         # check online msg
         for msg in online_msg :
             if msg[1] == current_username :
-                conn.send(bytes([13]))
+                conn.sendall(bytes([13]))
 
-                conn.send(bytes(len(msg[0])))
-                conn.send(msg[0].encode())
+                conn.sendall(bytes(len(msg[0])))
+                conn.sendall(msg[0].encode())
 
-                conn.send(bytes(len(msg[2])))
-                conn.send(msg[2].encode())
+                conn.sendall(bytes(len(msg[2])))
+                conn.sendall(msg[2].encode())
                 
                 OnlineMsg.remove(msg)
 
         # check online file
         for msg in file_msg :
             if msg[1] == current_username :
-                    conn.send(bytes([14]))
+                    conn.sendall(bytes([14]))
 
-                    conn.send(bytes(len(msg[0])))
-                    conn.send(msg[0].encode())
+                    conn.sendall(bytes(len(msg[0])))
+                    conn.sendall(msg[0].encode())
 
-                    conn.send(bytes(len(msg[2])))
-                    conn.send(msg[2].encode())
+                    conn.sendall(bytes(len(msg[2])))
+                    conn.sendall(msg[2].encode())
 
                     file_msg.remove(msg)
         
