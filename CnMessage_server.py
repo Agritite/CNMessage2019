@@ -46,16 +46,16 @@ def clientthread(conn, addr, qOnline, qOffline):
             # reading: non-blocking, timeout = 1s
             readable, _, _ = select.select([conn], [], [], 1)
             if conn in readable :
-                status = int(conn.recv(1).decode())
+                status = int(conn.recv(1))
             else : # nothing to read
                 status = -1 
 
             # login
             if status = 0 :
-                username_size = int(conn.recv(4).decode())
-                username = conn.recv(username_size).decode()
-                password_size = int(conn.recv(4).decode())
-                password = conn.recv(password_size).decode()
+                username_size = int(conn.recv(4))
+                username = conn.recv(username_size)
+                password_size = int(conn.recv(4))
+                password = conn.recv(password_size)
 
                 #login success
                 if username in user_list and user_list[username] == hash(password) :
@@ -74,10 +74,10 @@ def clientthread(conn, addr, qOnline, qOffline):
 
             # register 
             else if status = 1 :
-                username_size = int(conn.recv(4).decode())
-                username = conn.recv(username_size).decode()
-                password_size = int(conn.recv(4).decode())
-                password = conn.recv(password_size).decode()
+                username_size = int(conn.recv(4))
+                username = conn.recv(username_size)
+                password_size = int(conn.recv(4))
+                password = conn.recv(password_size)
                 # register failed
                 if username in user_list :
                     conn.send('0')
@@ -94,10 +94,10 @@ def clientthread(conn, addr, qOnline, qOffline):
 
             # send msg
             else if status = 3 :
-                username_size = int(conn.recv(4).decode())
-                dest = conn.recv(username_size).decode()
-                msg_size = int(conn.recv(4).decode())
-                message = conn.recv(msg_size).decode()
+                username_size = int(conn.recv(4))
+                dest = conn.recv(username_size)
+                msg_size = int(conn.recv(4))
+                message = conn.recv(msg_size)
 
                 if message : 
                     # prints the message and address of the user who just sent the message on the server terminal
@@ -128,7 +128,7 @@ def send_msg(message, client):
     if client in list_of_clients: 
         try: 
             #TODO : client format
-            client.send(message.encode())
+            client.send(message)
         except: 
             # if the link is broken, we remove the client 
             client.close()
@@ -140,7 +140,6 @@ def remove(connection):
     if connection in list_of_clients: 
         list_of_clients.remove(connection) 
         #TODO: remove from connected_client
-        for sock in 
   
 while True: 
   
