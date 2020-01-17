@@ -118,13 +118,13 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
             # put msg in list
             if dest not in user_list :
                 conn.sendall(bytes([0]))
-            else :
-                history[dest].append([current_username, dest, message])
+            elif dest in connected_client : # online
+                # history[dest].append([current_username, dest, message])
                 unread_msg[dest].append([current_username, dest, message])
                 conn.sendall(bytes([1]))
-            # else : #offline
-            #     history[dest].append([current_username, dest, message])
-            #     conn.sendall(bytes([1]))
+            else : #offline
+                history[dest].append([current_username, dest, message])
+                conn.sendall(bytes([1]))
 
         # file transfer
         elif status == 4 :
