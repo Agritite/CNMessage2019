@@ -163,10 +163,10 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
             print(current_username + ' requests ' + num + ' messages')
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in unread_msg[current_username] :
-                conn.sendall(bytes(len(msg[0])))
+                conn.sendall(len(msg[0]).to_bytes(4, byteorder='little'))
                 conn.sendall(msg[0].encode())
 
-                conn.sendall(bytes(len(msg[2])))
+                conn.sendall(len(msg[2]).to_bytes(4, byteorder='little'))
                 conn.sendall(msg[2].encode())
             
             unread_msg[current_username].clear()
@@ -177,10 +177,10 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
             print(current_username + ' requests ' + num + ' files')
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in (file_msg[current_username])[:] :
-                conn.sendall(bytes(len(msg[0])))
+                conn.sendall(len(msg[0]).to_bytes(4, byteorder='little'))
                 conn.sendall(msg[0].encode())
 
-                conn.sendall(bytes(len(msg[2])))
+                conn.sendall(len(msg[2]).to_bytes(4, byteorder='little'))
                 conn.sendall(msg[2].encode())
                 
             file_msg[current_username].clear()
