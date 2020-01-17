@@ -47,7 +47,7 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
         # reading: non-blocking, timeout = 1s
         readable, _, _ = select.select([conn], [], [], 1)
         if conn in readable :
-            status = int(conn.recv(1).decode())
+            status = int.from_bytes(conn.recv(4), byteorder='little')
         else : # nothing to read
             status = -1 
 
