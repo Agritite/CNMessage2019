@@ -4,11 +4,11 @@
 winexe
 C#
 .cs
-D:\Ubuntu\CN\CNMessage2019\Client\CNMessage\obj\Debug\
+D:\Ubuntu\CN\CNMessage2019\Client\CNMessage\obj\Release\
 CNMessage
 none
 false
-DEBUG;TRACE
+TRACE
 D:\Ubuntu\CN\CNMessage2019\Client\CNMessage\App.xaml
 4161883318
 

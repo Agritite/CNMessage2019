@@ -54,6 +54,18 @@ namespace CNMessage
             MyUsername = "";
             SendSock = null;
         }
+
+        public static void ReceiveAll(byte[] msg)
+        {
+            if (msg == null)
+            {
+                throw new ArgumentNullException(nameof(msg));
+            }
+            
+            int size = msg.Length;
+            for (int bytesLeft = size, receivedBytes = 0; bytesLeft > 0; bytesLeft -= receivedBytes)
+                receivedBytes = SendSock.Receive(msg, size - bytesLeft, bytesLeft, 0);
+        }
     }
 
     public partial class MainWindow : Window
@@ -95,20 +107,6 @@ namespace CNMessage
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             OnLogout();
-        }
-
-        private void ReceiveAll(Socket Sock, byte[] msg, int offset = 0, int size = 0)
-        {
-            if (msg == null)
-            {
-                throw new ArgumentNullException(nameof(msg));
-            }
-
-            if (size == 0)
-                size = msg.Length;
-
-            for (int bytesLeft = size, receivedBytes = 0; bytesLeft > 0; bytesLeft -= receivedBytes)
-                receivedBytes = Sock.Receive(msg, offset + size - bytesLeft, bytesLeft, 0);
         }
     }
 }
