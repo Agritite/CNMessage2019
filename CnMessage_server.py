@@ -29,7 +29,7 @@ connected_client = {}
 # [from, to, msg]
 unread_msg = defaultdict(list)
 # [from, to, filename, data]
-file_msg = []
+file_msg = defaultdict(list)
 # history[username] = list of [from, to, msg/filename]
 history = defaultdict(list)
 
@@ -133,7 +133,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
 
             fname_size = conn.recv(4)
             fname_size = int.from_bytes(fname_size, byteorder='little')
-            filename = conn.recv(fname_size)
+            filename = conn.recv(fname_size).decode()
 
             file_size = conn.recv(4)
             file_size = int.from_bytes(file_size, byteorder='little')
@@ -141,7 +141,8 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
 
             # prints the message of the user who just sent the file on the server terminal
             print(current_username + ' send ' + filename + ' to ' + dest)
-            # put msg in list
+
+            # put file msg in list
             if dest not in connected_client : #offline
                 conn.sendall(bytes([0]))
             else : #online
@@ -153,13 +154,13 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
         elif status == 5 :
             conn.close()
             del connected_client[current_username]
-            del file_msg[current_username]
+            file_msg[current_username].clear()
             break
 
         # client request online msg
         elif status == 13 :
-            print('text peek by ' + current_username)
             num = len(unread_msg[current_username])
+            print(current_username + ' requests ' + num + ' messages')
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in unread_msg[current_username] :
                 conn.sendall(bytes(len(msg[0])))
@@ -172,8 +173,8 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
 
         # client request online file
         elif status == 14 :
-            print('file peek by ' + current_username)
             num = len(file_msg[current_username])
+            print(current_username + ' requests ' + num + ' files')
             conn.sendall(num.to_bytes(4, byteorder='little'))
             for msg in (file_msg[current_username])[:] :
                 conn.sendall(bytes(len(msg[0])))
@@ -189,16 +190,14 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
     print('thread ended')
         
   
-def recvall(s, recv_size):
-  recv_buffer = []
-  while 1:
-    data = s.recv(recv_size)
-    if not data:
-        break
-    recv_buffer.extend(data)
-    if len(recv_buffer) == recv_size:
-        break
-  return ''.join(recv_buffer)
+def recvall(sock, count):
+    buf = b''
+    while count:
+        newbuf = sock.recv(count)
+        if not newbuf: return None
+        buf += newbuf
+        count -= len(newbuf)
+    return buf
 
 while True: 
 
