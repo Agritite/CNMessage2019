@@ -113,9 +113,9 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
             if dest not in user_list :
                 conn.sendall(bytes([0]))
             elif dest in connected_client : # online
-                OnlineMsg.append([current_username, dest, message])
+                online_msg.append([current_username, dest, message])
             else : #offline
-                OfflineMsg.append([current_username, dest, message])
+                offline_msg.append([current_username, dest, message])
 
         # file transfer
         elif status == 4 :
@@ -160,7 +160,7 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
                 conn.sendall(bytes(len(msg[2])))
                 conn.sendall(msg[2].encode())
                 
-                OnlineMsg.remove(msg)
+                online_msg.remove(msg)
 
         # check online file
         for msg in file_msg :
