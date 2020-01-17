@@ -47,16 +47,16 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
         # reading: non-blocking, timeout = 1s
         readable, _, _ = select.select([conn], [], [], 1)
         if conn in readable :
-            status = int(conn.recvall(1).decode())
+            status = int(conn.recv(1).decode())
         else : # nothing to read
             status = -1 
 
         # login
         if status == 0 :
-            username_size = int.from_bytes(conn.recvall(4), byteorder='little')
-            username = conn.recvall(username_size).decode()
-            password_size = int(conn.recvall(4).decode())
-            password = conn.recvall(password_size).decode()
+            username_size = int.from_bytes(conn.recv(4), byteorder='little')
+            username = conn.recv(username_size).decode()
+            password_size = int(conn.recv(4).decode())
+            password = conn.recv(password_size).decode()
 
             #login success
             if username in user_list and user_list[username] == hash(password) :
@@ -73,10 +73,10 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
 
         # register 
         elif status == 1 :
-            username_size = int(conn.recvall(4).decode())
-            username = conn.recvall(username_size).decode()
-            password_size = int(conn.recvall(4).decode())
-            password = conn.recvall(password_size).decode()
+            username_size = int(conn.recv(4).decode())
+            username = conn.recv(username_size).decode()
+            password_size = int(conn.recv(4).decode())
+            password = conn.recv(password_size).decode()
             # register failed
             if username in user_list :
                 conn.send(bytes([0]))
@@ -95,13 +95,13 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
 
         # send msg
         elif status == 3 :
-            username_size = conn.recvall(4)
+            username_size = conn.recv(4)
             username_size = int.from_bytes(username_size, byteorder='little')
-            dest = conn.recvall(username_size).decode()
+            dest = conn.recv(username_size).decode()
 
-            msg_size = conn.recvall(4)
+            msg_size = conn.recv(4)
             msg_size = int.from_bytes(msg_size, byteorder='little')
-            message = conn.recvall(msg_size).decode()
+            message = conn.recv(msg_size).decode()
 
             # prints the message of the user who just sent the message on the server terminal
             print(current_username + ' to ' + dest + ' : ' + message)
@@ -115,17 +115,17 @@ def clientthread(conn, addr, online_msg, offline_msg, file_msg):
 
         # file transfer
         elif status == 4 :
-            username_size = conn.recvall(4)
+            username_size = conn.recv(4)
             username_size = int.from_bytes(username_size, byteorder='little')
-            dest = conn.recvall(username_size).decode()
+            dest = conn.recv(username_size).decode()
 
-            fname_size = conn.recvall(4)
+            fname_size = conn.recv(4)
             fname_size = int.from_bytes(msg_size, byteorder='little')
-            filename = conn.recvall(fname_size)
+            filename = conn.recv(fname_size)
 
-            file_size = conn.recvall(4)
+            file_size = conn.recv(4)
             file_size = int.from_bytes(file_size, byteorder='little')
-            filedata = conn.recvall(file_size)
+            filedata = conn.recv(file_size)
 
             # prints the message of the user who just sent the file on the server terminal
             print(current_username + 'send file to ' + dest)
