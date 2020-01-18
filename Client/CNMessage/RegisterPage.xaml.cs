@@ -32,16 +32,14 @@ namespace CNMessage
         {
             CNM.SendSockConnect();
 
-            CNM.SendSock.Send(new byte[1] { 1 });
-            CNM.SendSock.Send(BitConverter.GetBytes(User.Text.Length));
-            CNM.SendSock.Send(Encoding.ASCII.GetBytes(User.Text));
-            CNM.SendSock.Send(BitConverter.GetBytes(Pwd.Password.Length));
-            CNM.SendSock.Send(Encoding.ASCII.GetBytes(Pwd.Password));
+            CNM.SendSock.Write(new byte[1] { 1 });
+            CNM.SendSock.Write(BitConverter.GetBytes(User.Text.Length));
+            CNM.SendSock.Write(Encoding.ASCII.GetBytes(User.Text));
+            CNM.SendSock.Write(BitConverter.GetBytes(Pwd.Password.Length));
+            CNM.SendSock.Write(Encoding.ASCII.GetBytes(Pwd.Password));
 
             byte[] msg = new byte[1];
             CNM.ReceiveAll(msg);
-            CNM.SendSock.Shutdown(SocketShutdown.Both);
-            CNM.SendSock.Close();
             CNM.Reset();
             if (msg[0] == BitConverter.GetBytes(0)[0])
             {

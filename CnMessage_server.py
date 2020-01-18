@@ -1,11 +1,9 @@
-import socket 
-import select 
-import sys 
+import socket
+import ssl
+import select
+import sys
 from collections import defaultdict
-from _thread import *
-
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
+from threading import *
 
 # checks whether sufficient arguments have been provided 
 if len(sys.argv) != 3: 
@@ -15,11 +13,19 @@ if len(sys.argv) != 3:
 # takes the first argument from command prompt as IP address 
 IP_address = str(sys.argv[1]) 
 Port = int(sys.argv[2]) 
+
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain('./server.crt', './server.key')
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
   
 # The client must be aware of these parameters.
-server.bind((IP_address, Port)) 
+server.bind((IP_address, Port))
 # listens for 10 active connections. 
-server.listen(10) 
+server.listen(10)
+
+ssock = context.wrap_socket(server, server_side = True)
 
 # userlist[username]=hash(pw)
 user_list = {}
@@ -44,11 +50,17 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
 
     while True: 
         # reading: non-blocking, timeout = 1s
-        readable, _, _ = select.select([conn], [], [], 1)
-        if conn in readable :
-            status = int.from_bytes(conn.recv(1), byteorder='little')
-        else : # nothing to read
-            status = -1 
+        try :
+            readable, _, err = select.select([conn], [], [], 1)
+            if conn in readable :
+                status = int.from_bytes(conn.recv(1), byteorder='little')
+            else : # nothing to read
+                status = -1 
+        except select.error :
+            conn.shutdown(2)
+            conn.close()
+            print('connection error')
+            break 
 
         # login
         if status == 0 :
@@ -156,6 +168,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
             conn.close()
             del connected_client[current_username]
             file_msg[current_username].clear()
+            print(current_username + ' logged out')
             break
 
         # client request online msg
@@ -189,8 +202,6 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
                 
             file_msg[current_username].clear()
 
-        # TODO : disconnect ?
-
     print('thread ended')
         
   
@@ -205,13 +216,14 @@ def recvall(sock, count):
 
 while True: 
 
-    conn, addr = server.accept() 
+    conn, addr = ssock.accept() 
 
     # prints the address of the user that just connected 
     print(addr[0] + " connected")
   
     # creates and individual thread for every user
-    start_new_thread(clientthread, (conn, addr, unread_msg, file_msg, history))     
+    t = Thread(target = clientthread, args = (conn, addr, unread_msg, file_msg, history))
+    t.start()
   
 conn.close() 
 server.close() 

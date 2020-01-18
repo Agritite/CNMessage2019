@@ -103,7 +103,7 @@ namespace CNMessage
 
         private void RetrieveHistory()
         {
-            CNM.SendSock.Send(new byte[1] { 2 });
+            CNM.SendSock.Write(new byte[1] { 2 });
 
             byte[] msg = new byte[4];
             ChatBox.Text = "";
@@ -134,7 +134,7 @@ namespace CNMessage
 
         private void PeekText()
         {
-            CNM.SendSock.Send(new byte[1] { 13 });
+            CNM.SendSock.Write(new byte[1] { 13 });
 
             byte[] msg = new byte[4];
             CNM.ReceiveAll(msg);
@@ -164,7 +164,7 @@ namespace CNMessage
 
         private void PeekFile()
         {
-            CNM.SendSock.Send(new byte[1] { 14 });
+            CNM.SendSock.Write(new byte[1] { 14 });
 
             byte[] msg = new byte[4];
             CNM.ReceiveAll(msg);
@@ -210,11 +210,11 @@ namespace CNMessage
 
         private void OnSendClick(object sender, RoutedEventArgs e)
         {
-            CNM.SendSock.Send(new byte[1] { 3 });
-            CNM.SendSock.Send(BitConverter.GetBytes(TargetUser.Text.Length));
-            CNM.SendSock.Send(Encoding.ASCII.GetBytes(TargetUser.Text));
-            CNM.SendSock.Send(BitConverter.GetBytes(PreparetoSend.Text.Length));
-            CNM.SendSock.Send(Encoding.ASCII.GetBytes(PreparetoSend.Text));
+            CNM.SendSock.Write(new byte[1] { 3 });
+            CNM.SendSock.Write(BitConverter.GetBytes(TargetUser.Text.Length));
+            CNM.SendSock.Write(Encoding.ASCII.GetBytes(TargetUser.Text));
+            CNM.SendSock.Write(BitConverter.GetBytes(PreparetoSend.Text.Length));
+            CNM.SendSock.Write(Encoding.ASCII.GetBytes(PreparetoSend.Text));
 
             byte[] msg = new byte[1];
             CNM.ReceiveAll(msg);
@@ -233,13 +233,13 @@ namespace CNMessage
                 return;
 
             byte[] file = File.ReadAllBytes(ofd.FileName);
-            CNM.SendSock.Send(new byte[1] { 4 });
-            CNM.SendSock.Send(BitConverter.GetBytes(TargetUser.Text.Length));
-            CNM.SendSock.Send(Encoding.ASCII.GetBytes(TargetUser.Text));
-            CNM.SendSock.Send(BitConverter.GetBytes(ofd.SafeFileName.Length));
-            CNM.SendSock.Send(Encoding.ASCII.GetBytes(ofd.SafeFileName));
-            CNM.SendSock.Send(BitConverter.GetBytes(file.Length));
-            CNM.SendSock.Send(file);
+            CNM.SendSock.Write(new byte[1] { 4 });
+            CNM.SendSock.Write(BitConverter.GetBytes(TargetUser.Text.Length));
+            CNM.SendSock.Write(Encoding.ASCII.GetBytes(TargetUser.Text));
+            CNM.SendSock.Write(BitConverter.GetBytes(ofd.SafeFileName.Length));
+            CNM.SendSock.Write(Encoding.ASCII.GetBytes(ofd.SafeFileName));
+            CNM.SendSock.Write(BitConverter.GetBytes(file.Length));
+            CNM.SendSock.Write(file);
 
             byte[] msg = new byte[1];
             CNM.ReceiveAll(msg);

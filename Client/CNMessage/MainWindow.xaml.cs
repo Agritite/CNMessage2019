@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -31,6 +34,7 @@ namespace CNMessage
             MyUsername = "";
             serverAddress = "127.0.0.1";
             sendport = 35645;
+            sock = null;
             SendSock = null;
         }
 
@@ -40,19 +44,38 @@ namespace CNMessage
         static readonly string serverAddress;
         static readonly int sendport;
 
-        public static Socket SendSock;
+        public static SslStream SendSock;
+        static TcpClient sock;
+
+        public static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+        }
 
         public static void SendSockConnect()
         {
-            SendSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            SendSock.Connect(new IPEndPoint(IPAddress.Parse(serverAddress), sendport));
+            sock = new TcpClient(serverAddress, sendport);
+            SendSock = new SslStream(sock.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+            try
+            {
+                SendSock.AuthenticateAsClient("cnmessage");
+            }
+            catch(AuthenticationException)
+            {
+                Reset();
+                MessageBox.Show("Server error!", "Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
         }
 
         public static void Reset()
         {
+            SendSock?.Close();
+            SendSock = null;
+            sock?.Close();
+            sock = null;
             IsLogin = false;
             MyUsername = "";
-            SendSock = null;
         }
 
         public static void ReceiveAll(byte[] msg)
@@ -64,7 +87,7 @@ namespace CNMessage
             
             int size = msg.Length;
             for (int bytesLeft = size, receivedBytes = 0; bytesLeft > 0; bytesLeft -= receivedBytes)
-                receivedBytes = SendSock.Receive(msg, size - bytesLeft, bytesLeft, 0);
+                receivedBytes = SendSock.Read(msg, size - bytesLeft, bytesLeft);
         }
     }
 
@@ -97,9 +120,7 @@ namespace CNMessage
         public void OnLogout()
         {
             if (CNM.IsLogin)
-                CNM.SendSock.Send(new byte[1] { 5 });
-            CNM.SendSock?.Shutdown(SocketShutdown.Both);
-            CNM.SendSock?.Close();
+                CNM.SendSock.Write(new byte[1] { 5 });
             CNM.Reset();
             contentControl.Content = new LoginPage();
         }
