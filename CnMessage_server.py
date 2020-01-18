@@ -2,7 +2,7 @@ import socket
 import select 
 import sys 
 from collections import defaultdict
-from _thread import *
+from threading import *
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
@@ -44,11 +44,17 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
 
     while True: 
         # reading: non-blocking, timeout = 1s
-        readable, _, _ = select.select([conn], [], [], 1)
-        if conn in readable :
-            status = int.from_bytes(conn.recv(1), byteorder='little')
-        else : # nothing to read
-            status = -1 
+        try :
+            readable, _, err = select.select([conn], [], [], 1)
+            if conn in readable :
+                status = int.from_bytes(conn.recv(1), byteorder='little')
+            else : # nothing to read
+                status = -1 
+        except select.error :
+            conn.shutdown(2)
+            conn.close()
+            print('connection error')
+            break 
 
         # login
         if status == 0 :
@@ -156,6 +162,7 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
             conn.close()
             del connected_client[current_username]
             file_msg[current_username].clear()
+            print(current_username + ' logged out')
             break
 
         # client request online msg
@@ -189,8 +196,6 @@ def clientthread(conn, addr, unread_msg, file_msg, history):
                 
             file_msg[current_username].clear()
 
-        # TODO : disconnect ?
-
     print('thread ended')
         
   
@@ -211,7 +216,8 @@ while True:
     print(addr[0] + " connected")
   
     # creates and individual thread for every user
-    start_new_thread(clientthread, (conn, addr, unread_msg, file_msg, history))     
+    t = Thread(target = clientthread, args = (conn, addr, unread_msg, file_msg, history))
+    t.start()
   
 conn.close() 
 server.close() 
